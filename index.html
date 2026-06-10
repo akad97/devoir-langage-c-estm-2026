@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devoir – Langage C | ESTM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e1117;
+    --surface: #161b26;
+    --card: #1c2333;
+    --border: #2a3347;
+    --accent: #4f9cf9;
+    --accent2: #7c5cbf;
+    --green: #2dd4a0;
+    --red: #f26b6b;
+    --yellow: #f5c842;
+    --text: #e2e8f0;
+    --muted: #8892a4;
+    --code-bg: #111827;
+    --radius: 10px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0e1117 0%, #161b26 60%, #1a1240 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-badge {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+  .exam-title { font-size: 18px; font-weight: 600; }
+  .exam-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ── TIMER ── */
+  #timer-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 20px;
+    text-align: center;
+    min-width: 130px;
+  }
+  #timer-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  #timer-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent);
+    transition: color .3s;
+  }
+  #timer-display.warning { color: var(--yellow); }
+  #timer-display.danger  { color: var(--red); animation: pulse .8s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* ── IDENTITY BAR ── */
+  #identity-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .id-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+  .id-field label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+  .id-field input {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .id-field input:focus { border-color: var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 40px 0 20px;
+  }
+  .section-pill {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .section-title { font-size: 17px; font-weight: 600; }
+  .section-points { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    transition: border-color .2s;
+  }
+  .q-card:hover { border-color: #3a4560; }
+  .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .q-text { font-size: 15px; line-height: 1.6; margin-bottom: 16px; }
+
+  /* ── CODE BLOCK ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid #1e2a3a;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 10px 0 16px;
+    color: #a8d8ff;
+  }
+  pre .kw  { color: #c792ea; }
+  pre .fn  { color: #82aaff; }
+  pre .str { color: #c3e88d; }
+  pre .cm  { color: #546e7a; font-style: italic; }
+  pre .num { color: #f78c6c; }
+
+  /* ── RADIO / CHECKBOX OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background .15s, border-color .15s;
+    user-select: none;
+  }
+  .opt-label:hover { background: #1e2740; border-color: var(--accent); }
+  .opt-label input { accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ── TRUE / FALSE ── */
+  .tf-group { display: flex; gap: 12px; }
+  .tf-btn {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all .15s;
+    text-align: center;
+  }
+  .tf-btn:hover { background: #1e2740; border-color: var(--accent); }
+  .tf-btn.selected-true  { background: rgba(45,212,160,.15); border-color: var(--green); color: var(--green); }
+  .tf-btn.selected-false { background: rgba(242,107,107,.15); border-color: var(--red);   color: var(--red);   }
+
+  /* ── SHORT ANSWER ── */
+  .short-answer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+    resize: vertical;
+    min-height: 70px;
+  }
+  .short-answer:focus { border-color: var(--accent); }
+
+  /* ── CODE ANSWER ── */
+  .code-answer {
+    background: var(--code-bg);
+    border: 1px solid #1e2a3a;
+    border-radius: 8px;
+    padding: 14px 16px;
+    color: #a8d8ff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+    resize: vertical;
+    min-height: 160px;
+  }
+  .code-answer:focus { border-color: var(--accent); }
+
+  /* ── SUBMIT ── */
+  #submit-zone {
+    margin-top: 48px;
+    text-align: center;
+  }
+  #submit-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: 16px 48px;
+    cursor: pointer;
+    letter-spacing: .5px;
+    transition: opacity .2s, transform .1s;
+    box-shadow: 0 4px 20px rgba(79,156,249,.3);
+  }
+  #submit-btn:hover  { opacity: .9; transform: translateY(-1px); }
+  #submit-btn:active { transform: translateY(0); }
+  #submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── RESULT PANEL ── */
+  #result-panel {
+    display: none;
+    margin-top: 40px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px;
+    text-align: center;
+  }
+  .score-circle {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .score-num { font-size: 38px; font-family: 'JetBrains Mono', monospace; }
+  .score-den { font-size: 14px; color: var(--muted); }
+  .appreciation {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 10px 0 6px;
+  }
+  .appreciation-sub { font-size: 14px; color: var(--muted); }
+  .detail-row {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .detail-item { font-size: 13px; color: var(--muted); }
+  .detail-item strong { color: var(--text); display: block; font-size: 18px; margin-bottom: 2px; }
+
+  /* ── OVERLAY (prevent leaving) ── */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,12,20,.96);
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+    padding: 40px;
+  }
+  #overlay.show { display: flex; }
+  #overlay h2 { font-size: 24px; color: var(--red); }
+  #overlay p  { color: var(--muted); max-width: 400px; line-height: 1.6; }
+  #overlay button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 32px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── ANSWERED INDICATOR ── */
+  .q-card.answered { border-left: 3px solid var(--accent); }
+
+  /* ── INSTRUCTIONS ── */
+  #instructions-block {
+    background: linear-gradient(135deg, #0d1f35 0%, #111827 100%);
+    border: 1px solid #2a4a6b;
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 28px 30px;
+    margin-bottom: 32px;
+  }
+  #instructions-block h2 {
+    font-size: 15px; font-weight: 700; color: var(--accent);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  }
+  .instr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .instr-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: rgba(255,255,255,.04); border: 1px solid #1e3450;
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--text);
+  }
+  .instr-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .instr-item.warn { background: rgba(242,107,107,.08); border-color: rgba(242,107,107,.35); color: #fca5a5; }
+  .instr-divider { border: none; border-top: 1px solid #1e3450; margin: 16px 0; }
+  .instr-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; }
+
+
+
+  /* ── FIELD VALIDATION ── */
+  .id-field input.field-error {
+    border-color: var(--red) !important;
+    background: rgba(242,107,107,.07);
+    animation: shake .35s ease;
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .id-field .field-msg {
+    font-size: 11px;
+    color: var(--red);
+    margin-top: 4px;
+    display: none;
+  }
+  .id-field input.field-error + .field-msg,
+  .id-field .field-msg.show { display: block; }
+  #identity-bar { position: relative; }
+  #identity-error-banner {
+    display: none;
+    width: 100%;
+    background: rgba(242,107,107,.12);
+    border-top: 1px solid rgba(242,107,107,.4);
+    color: #fca5a5;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 40px;
+    text-align: center;
+  }
+  /* ── START BUTTON ── */
+  #start-btn-zone {
+    text-align: center;
+    margin-top: 24px;
+  }
+  #start-btn {
+    background: linear-gradient(135deg, var(--green), #1a9e76);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    padding: 18px 56px;
+    cursor: pointer;
+    letter-spacing: .5px;
+    box-shadow: 0 4px 24px rgba(45,212,160,.35);
+    transition: opacity .2s, transform .1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #start-btn:hover  { opacity: .9; transform: translateY(-2px); }
+  #start-btn:active { transform: translateY(0); }
+  #start-btn .btn-arrow { font-size: 20px; transition: transform .2s; }
+  #start-btn:hover .btn-arrow { transform: translateX(4px); }
+
+  /* ── QUESTIONS WRAPPER (hidden until start) ── */
+  #questions-wrapper { display: none; }
+  /* ── SCREENSHOT BUTTON ── */
+  #screenshot-btn {
+    display: none; margin: 20px auto 0;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 13px 32px; font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    gap: 8px; align-items: center; transition: background .2s, border-color .2s;
+  }
+  #screenshot-btn:hover { background: #1e2740; border-color: var(--accent); }
+  #screenshot-capture { display:none; margin: 14px auto 0; max-width:100%; border-radius:10px; border:1px solid var(--border); }
+
+  @media (max-width: 600px) {
+    header { padding: 16px 20px; flex-wrap: wrap; gap: 12px; }
+    #identity-bar { padding: 16px 20px; }
+    main { padding: 24px 16px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <h2>⚠️ Ne quittez pas l'devoir !</h2>
+  <p>Vous avez tenté de quitter la page. Restez sur l'devoir jusqu'à la soumission. Chaque tentative est enregistrée.</p>
+  <button onclick="dismissOverlay()">Retourner à l'devoir</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <div class="logo-badge">ESTM</div>
+    <div>
+      <div class="exam-title">Devoir – Langage de Programmation C</div>
+      <div class="exam-sub">L1 · Semestre 2 · Durée : 1h30</div>
+    </div>
+  </div>
+  <div id="timer-box">
+    <div id="timer-label">Temps restant</div>
+    <div id="timer-display">1:30:00</div>
+  </div>
+</header>
+
+<!-- IDENTITY -->
+<div id="identity-bar">
+  <div class="id-field">
+    <label>Nom <span style="color:var(--red)">*</span></label>
+    <input type="text" id="f-nom" placeholder="Votre nom" oninput="clearFieldError('f-nom')">
+    <span class="field-msg" id="err-nom">Ce champ est obligatoire</span>
+  </div>
+  <div class="id-field">
+    <label>Prénom <span style="color:var(--red)">*</span></label>
+    <input type="text" id="f-prenom" placeholder="Votre prénom" oninput="clearFieldError('f-prenom')">
+    <span class="field-msg" id="err-prenom">Ce champ est obligatoire</span>
+  </div>
+  <div class="id-field">
+    <label>Classe <span style="color:var(--red)">*</span></label>
+    <input type="text" id="f-classe" placeholder="ex: L1-2i" oninput="clearFieldError('f-classe')">
+    <span class="field-msg" id="err-classe">Ce champ est obligatoire</span>
+  </div>
+  <div class="id-field">
+    <label>Année universitaire <span style="color:var(--red)">*</span></label>
+    <input type="text" id="f-annee" placeholder="ex: 2025-2026" oninput="clearFieldError('f-annee')">
+    <span class="field-msg" id="err-annee">Ce champ est obligatoire</span>
+  </div>
+</div>
+<div id="identity-error-banner">⚠️ Veuillez remplir tous les champs obligatoires (marqués <span style="color:var(--red);font-weight:700">*</span>) avant de commencer.</div>
+
+<main>
+
+<!-- ═══════════════════════════════════════════
+     CONSIGNES DU DEVOIR
+════════════════════════════════════════════ -->
+<div id="instructions-block">
+  <h2>📋 Consignes importantes</h2>
+  <div class="instr-grid">
+    <div class="instr-item">
+      <span class="instr-icon">⏱️</span>
+      <div><strong>Durée :</strong> 1h30. Le chronomètre est visible en haut à droite. Le devoir se soumet automatiquement à la fin du temps.</div>
+    </div>
+    <div class="instr-item">
+      <span class="instr-icon">📝</span>
+      <div><strong>Barème :</strong> devoir noté sur 20 pts — Vrai/Faux (4 pts), QCU (5 pts), QCM (5 pts), Réponses courtes (3 pts), Codage (3 pts).</div>
+    </div>
+    <div class="instr-item">
+      <span class="instr-icon">👤</span>
+      <div><strong>Identité :</strong> remplissez obligatoirement votre nom, prénom, classe et année universitaire avant de commencer.</div>
+    </div>
+    <div class="instr-item">
+      <span class="instr-icon">💾</span>
+      <div><strong>Sauvegarde :</strong> après soumission, utilisez le bouton <em>"Capturer ma note"</em> pour enregistrer une preuve de votre résultat.</div>
+    </div>
+    <div class="instr-item warn">
+      <span class="instr-icon">🚫</span>
+      <div><strong>Sortie de page :</strong> la 1ère sortie est tolérée. Chaque sortie supplémentaire entraîne une pénalité de <strong>−0,5 pt</strong> sur la note finale.</div>
+    </div>
+    <div class="instr-item warn">
+      <span class="instr-icon">⚠️</span>
+      <div><strong>Intégrité :</strong> tout changement d'onglet, alt-tab ou tentative de fermeture est détecté et enregistré. Travaillez uniquement dans cette fenêtre.</div>
+    </div>
+    <div class="instr-item warn">
+      <span class="instr-icon">🔒</span>
+      <div><strong>Fermeture :</strong> ne fermez pas le navigateur avant d'avoir soumis. Le rechargement de la page efface toutes vos réponses.</div>
+    </div>
+    <div class="instr-item">
+      <span class="instr-icon">✅</span>
+      <div><strong>Bonne chance !</strong> Lisez attentivement chaque question avant de répondre. Gérez bien votre temps.</div>
+    </div>
+  </div>
+  <hr class="instr-divider">
+  <div class="instr-note">En commençant ce devoir, vous acceptez de respecter les règles d'intégrité académique de l'ESTM.</div>
+</div>
+
+<!-- START BUTTON -->
+<div id="start-btn-zone">
+  <button id="start-btn" onclick="startDevoir()">
+    <span>Commencer le devoir</span>
+    <span class="btn-arrow">→</span>
+  </button>
+</div>
+
+<!-- QUESTIONS WRAPPER -->
+<div id="questions-wrapper">
+
+<!-- ═══════════════════════════════════════════
+     PARTIE I — VRAI / FAUX  (10 × 0.4 = 4 pts)
+════════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-pill">Partie I</div>
+  <div class="section-title">Vrai / Faux</div>
+  <div class="section-points">10 questions · 4 pts</div>
+</div>
+
+<!-- VF 1 -->
+<div class="q-card" id="qvf1">
+  <div class="q-num">VF · 01</div>
+  <div class="q-text">Le langage C a été créé par Dennis Ritchie en 1972 aux Laboratoires Bell.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf1','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf1','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 2 -->
+<div class="q-card" id="qvf2">
+  <div class="q-num">VF · 02</div>
+  <div class="q-text">Le C++ prend en charge les classes et les objets, contrairement au C.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf2','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf2','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 3 -->
+<div class="q-card" id="qvf3">
+  <div class="q-num">VF · 03</div>
+  <div class="q-text">En C, il est facultatif de terminer une instruction par un point-virgule.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf3','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf3','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 4 -->
+<div class="q-card" id="qvf4">
+  <div class="q-num">VF · 04</div>
+  <div class="q-text">La séquence <code>\n</code> en C permet d'aller à la ligne suivante à l'écran.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf4','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf4','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 5 -->
+<div class="q-card" id="qvf5">
+  <div class="q-num">VF · 05</div>
+  <div class="q-text">Un commentaire sur une seule ligne en C commence par <code>/*</code>.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf5','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf5','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 6 -->
+<div class="q-card" id="qvf6">
+  <div class="q-num">VF · 06</div>
+  <div class="q-text">Le type <code>float</code> en C est utilisé pour stocker des nombres entiers sans décimales.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf6','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf6','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 7 -->
+<div class="q-card" id="qvf7">
+  <div class="q-num">VF · 07</div>
+  <div class="q-text">La fonction <code>scanf()</code> permet d'obtenir une saisie de l'utilisateur en C.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf7','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf7','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 8 -->
+<div class="q-card" id="qvf8">
+  <div class="q-num">VF · 08</div>
+  <div class="q-text">Le spécificateur de format <code>%c</code> est utilisé pour afficher une variable de type <code>int</code>.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf8','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf8','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 9 -->
+<div class="q-card" id="qvf9">
+  <div class="q-num">VF · 09</div>
+  <div class="q-text">La séquence d'échappement <code>\t</code> insère un espace horizontal (tabulation) en C.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf9','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf9','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+<!-- VF 10 -->
+<div class="q-card" id="qvf10">
+  <div class="q-num">VF · 10</div>
+  <div class="q-text">En C, le compilateur GCC traduit le code source en un langage compréhensible par l'ordinateur.</div>
+  <div class="tf-group">
+    <button class="tf-btn" onclick="setTF('vf10','V',this)">✓ Vrai</button>
+    <button class="tf-btn" onclick="setTF('vf10','F',this)">✗ Faux</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     PARTIE II — QCU  (10 × 0.5 = 5 pts)
+════════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-pill">Partie II</div>
+  <div class="section-title">Choix unique (QCU)</div>
+  <div class="section-points">10 questions · 5 pts</div>
+</div>
+
+<!-- QCU 1 -->
+<div class="q-card" id="qqcu1">
+  <div class="q-num">QCU · 01</div>
+  <div class="q-text">Quel spécificateur de format utilise-t-on pour afficher un entier avec <code>printf()</code> ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu1" value="a"> %f</label>
+    <label class="opt-label"><input type="radio" name="qcu1" value="b"> %d</label>
+    <label class="opt-label"><input type="radio" name="qcu1" value="c"> %c</label>
+    <label class="opt-label"><input type="radio" name="qcu1" value="d"> %s</label>
+  </div>
+</div>
+
+<!-- QCU 2 -->
+<div class="q-card" id="qqcu2">
+  <div class="q-num">QCU · 02</div>
+  <div class="q-text">Quelle bibliothèque doit-on inclure pour utiliser <code>printf()</code> et <code>scanf()</code> en C ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu2" value="a"> &lt;stdlib.h&gt;</label>
+    <label class="opt-label"><input type="radio" name="qcu2" value="b"> &lt;math.h&gt;</label>
+    <label class="opt-label"><input type="radio" name="qcu2" value="c"> &lt;stdio.h&gt;</label>
+    <label class="opt-label"><input type="radio" name="qcu2" value="d"> &lt;string.h&gt;</label>
+  </div>
+</div>
+
+<!-- QCU 3 -->
+<div class="q-card" id="qqcu3">
+  <div class="q-num">QCU · 03</div>
+  <div class="q-text">Quelle est la valeur retournée par <code>main()</code> pour indiquer que le programme s'est terminé sans erreur ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu3" value="a"> 1</label>
+    <label class="opt-label"><input type="radio" name="qcu3" value="b"> -1</label>
+    <label class="opt-label"><input type="radio" name="qcu3" value="c"> 0</label>
+    <label class="opt-label"><input type="radio" name="qcu3" value="d"> NULL</label>
+  </div>
+</div>
+
+<!-- QCU 4 -->
+<div class="q-card" id="qqcu4">
+  <div class="q-num">QCU · 04</div>
+  <div class="q-text">Quelle séquence d'échappement permet d'afficher un guillemet double <code>"</code> dans une chaîne C ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu4" value="a"> \'</label>
+    <label class="opt-label"><input type="radio" name="qcu4" value="b"> \\</label>
+    <label class="opt-label"><input type="radio" name="qcu4" value="c"> \"</label>
+    <label class="opt-label"><input type="radio" name="qcu4" value="d"> \q</label>
+  </div>
+</div>
+
+<!-- QCU 5 -->
+<div class="q-card" id="qqcu5">
+  <div class="q-num">QCU · 05</div>
+  <div class="q-text">Comment déclare-t-on correctement une variable entière nommée <code>age</code> avec la valeur <code>20</code> en C ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu5" value="a"> float age = 20;</label>
+    <label class="opt-label"><input type="radio" name="qcu5" value="b"> int age = 20;</label>
+    <label class="opt-label"><input type="radio" name="qcu5" value="c"> char age = 20;</label>
+    <label class="opt-label"><input type="radio" name="qcu5" value="d"> age int = 20;</label>
+  </div>
+</div>
+
+<!-- QCU 6 -->
+<div class="q-card" id="qqcu6">
+  <div class="q-num">QCU · 06</div>
+  <div class="q-text">Quel type C est utilisé pour stocker un seul caractère comme <code>'A'</code> ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu6" value="a"> int</label>
+    <label class="opt-label"><input type="radio" name="qcu6" value="b"> float</label>
+    <label class="opt-label"><input type="radio" name="qcu6" value="c"> char</label>
+    <label class="opt-label"><input type="radio" name="qcu6" value="d"> string</label>
+  </div>
+</div>
+
+<!-- QCU 7 -->
+<div class="q-card" id="qqcu7">
+  <div class="q-num">QCU · 07</div>
+  <div class="q-text">Quelle est la sortie du code suivant ?<pre>#include &lt;stdio.h&gt;
+int main() {
+    printf("Hello\n");
+    printf("World");
+    return 0;
+}</pre></div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu7" value="a"> Hello World (sur une ligne)</label>
+    <label class="opt-label"><input type="radio" name="qcu7" value="b"> Hello<br>&nbsp;&nbsp;&nbsp;&nbsp;World (sur deux lignes)</label>
+    <label class="opt-label"><input type="radio" name="qcu7" value="c"> HelloWorld (sans espace)</label>
+    <label class="opt-label"><input type="radio" name="qcu7" value="d"> Erreur de compilation</label>
+  </div>
+</div>
+
+<!-- QCU 8 -->
+<div class="q-card" id="qqcu8">
+  <div class="q-num">QCU · 08</div>
+  <div class="q-text">Dans <code>scanf("%d", &myNum);</code>, à quoi sert le symbole <code>&</code> ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu8" value="a"> C'est un opérateur ET logique</label>
+    <label class="opt-label"><input type="radio" name="qcu8" value="b"> Il fournit l'adresse mémoire de la variable</label>
+    <label class="opt-label"><input type="radio" name="qcu8" value="c"> Il affiche la valeur de la variable</label>
+    <label class="opt-label"><input type="radio" name="qcu8" value="d"> Il n'a aucun rôle particulier</label>
+  </div>
+</div>
+
+<!-- QCU 9 -->
+<div class="q-card" id="qqcu9">
+  <div class="q-num">QCU · 09</div>
+  <div class="q-text">Quel IDE est recommandé dans le cours pour compiler du code C sous Windows ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu9" value="a"> PyCharm</label>
+    <label class="opt-label"><input type="radio" name="qcu9" value="b"> IntelliJ IDEA</label>
+    <label class="opt-label"><input type="radio" name="qcu9" value="c"> Code::Blocks</label>
+    <label class="opt-label"><input type="radio" name="qcu9" value="d"> Android Studio</label>
+  </div>
+</div>
+
+<!-- QCU 10 -->
+<div class="q-card" id="qqcu10">
+  <div class="q-num">QCU · 10</div>
+  <div class="q-text">Quel spécificateur de format est utilisé pour afficher un <code>float</code> avec <code>printf()</code> ?</div>
+  <div class="options">
+    <label class="opt-label"><input type="radio" name="qcu10" value="a"> %d</label>
+    <label class="opt-label"><input type="radio" name="qcu10" value="b"> %c</label>
+    <label class="opt-label"><input type="radio" name="qcu10" value="c"> %f</label>
+    <label class="opt-label"><input type="radio" name="qcu10" value="d"> %i</label>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     PARTIE III — QCM  (10 × 0.5 = 5 pts)
+════════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-pill">Partie III</div>
+  <div class="section-title">Choix multiples (QCM)</div>
+  <div class="section-points">10 questions · 5 pts</div>
+</div>
+
+<!-- QCM 1 -->
+<div class="q-card" id="qqcm1">
+  <div class="q-num">QCM · 01</div>
+  <div class="q-text">Parmi les propositions suivantes, lesquelles sont des avantages du langage C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm1" value="a"> Il est très rapide comparé à Java et Python</label>
+    <label class="opt-label"><input type="checkbox" name="qcm1" value="b"> Il prend en charge la programmation orientée objet nativement</label>
+    <label class="opt-label"><input type="checkbox" name="qcm1" value="c"> Il est très polyvalent (applications et technologies)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm1" value="d"> Connaître C facilite l'apprentissage de Java, Python, C++</label>
+  </div>
+</div>
+
+<!-- QCM 2 -->
+<div class="q-card" id="qqcm2">
+  <div class="q-num">QCM · 02</div>
+  <div class="q-text">Quels éléments sont nécessaires pour commencer à programmer en C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm2" value="a"> Un éditeur de texte (ex: VS Code)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm2" value="b"> Un compilateur (ex: GCC)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm2" value="c"> Une connexion Internet obligatoire</label>
+    <label class="opt-label"><input type="checkbox" name="qcm2" value="d"> Un environnement de développement intégré (IDE)</label>
+  </div>
+</div>
+
+<!-- QCM 3 -->
+<div class="q-card" id="qqcm3">
+  <div class="q-num">QCM · 03</div>
+  <div class="q-text">Quelles séquences d'échappement sont valides en C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm3" value="a"> \n (nouvelle ligne)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm3" value="b"> \t (tabulation horizontale)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm3" value="c"> \\ (barre oblique inverse)</label>
+    <label class="opt-label"><input type="checkbox" name="qcm3" value="d"> \p (nouvelle page — invalide)</label>
+  </div>
+</div>
+
+<!-- QCM 4 -->
+<div class="q-card" id="qqcm4">
+  <div class="q-num">QCM · 04</div>
+  <div class="q-text">Quels types de données de base existent en C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm4" value="a"> int</label>
+    <label class="opt-label"><input type="checkbox" name="qcm4" value="b"> float</label>
+    <label class="opt-label"><input type="checkbox" name="qcm4" value="c"> char</label>
+    <label class="opt-label"><input type="checkbox" name="qcm4" value="d"> boolean</label>
+  </div>
+</div>
+
+<!-- QCM 5 -->
+<div class="q-card" id="qqcm5">
+  <div class="q-num">QCM · 05</div>
+  <div class="q-text">Quelles affirmations sur les commentaires en C sont correctes ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm5" value="a"> // démarre un commentaire sur une seule ligne</label>
+    <label class="opt-label"><input type="checkbox" name="qcm5" value="b"> /* ... */ entoure un commentaire multiligne</label>
+    <label class="opt-label"><input type="checkbox" name="qcm5" value="c"> Les commentaires sont exécutés par le compilateur</label>
+    <label class="opt-label"><input type="checkbox" name="qcm5" value="d"> Les commentaires servent à documenter et expliquer le code</label>
+  </div>
+</div>
+
+<!-- QCM 6 -->
+<div class="q-card" id="qqcm6">
+  <div class="q-num">QCM · 06</div>
+  <div class="q-text">Parmi les instructions suivantes, lesquelles sont syntaxiquement correctes en C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm6" value="a"> int x = 10;</label>
+    <label class="opt-label"><input type="checkbox" name="qcm6" value="b"> float pi = 3.14;</label>
+    <label class="opt-label"><input type="checkbox" name="qcm6" value="c"> char lettre = "A";</label>
+    <label class="opt-label"><input type="checkbox" name="qcm6" value="d"> char lettre = 'A';</label>
+  </div>
+</div>
+
+<!-- QCM 7 -->
+<div class="q-card" id="qqcm7">
+  <div class="q-num">QCM · 07</div>
+  <div class="q-text">Quels spécificateurs de format sont utilisés avec <code>printf()</code> en C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm7" value="a"> %d pour int</label>
+    <label class="opt-label"><input type="checkbox" name="qcm7" value="b"> %f pour float</label>
+    <label class="opt-label"><input type="checkbox" name="qcm7" value="c"> %c pour char</label>
+    <label class="opt-label"><input type="checkbox" name="qcm7" value="d"> %b pour boolean</label>
+  </div>
+</div>
+
+<!-- QCM 8 -->
+<div class="q-card" id="qqcm8">
+  <div class="q-num">QCM · 08</div>
+  <div class="q-text">Lesquelles des affirmations suivantes sur les variables en C sont vraies ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm8" value="a"> On peut déclarer une variable sans lui assigner de valeur immédiatement</label>
+    <label class="opt-label"><input type="checkbox" name="qcm8" value="b"> Les variables servent à stocker des valeurs de données</label>
+    <label class="opt-label"><input type="checkbox" name="qcm8" value="c"> Une variable de type int peut stocker 3.14</label>
+    <label class="opt-label"><input type="checkbox" name="qcm8" value="d"> Le nom de la variable est précédé de son type lors de la déclaration</label>
+  </div>
+</div>
+
+<!-- QCM 9 -->
+<div class="q-card" id="qqcm9">
+  <div class="q-num">QCM · 09</div>
+  <div class="q-text">Quels IDE sont mentionnés dans le cours comme outils pour éditer et compiler du C ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm9" value="a"> Code::Blocks</label>
+    <label class="opt-label"><input type="checkbox" name="qcm9" value="b"> Eclipse</label>
+    <label class="opt-label"><input type="checkbox" name="qcm9" value="c"> Visual Studio</label>
+    <label class="opt-label"><input type="checkbox" name="qcm9" value="d"> Jupyter Notebook</label>
+  </div>
+</div>
+
+<!-- QCM 10 -->
+<div class="q-card" id="qqcm10">
+  <div class="q-num">QCM · 10</div>
+  <div class="q-text">Quelles affirmations sur la fonction <code>printf()</code> sont correctes ? <em>(plusieurs réponses possibles)</em></div>
+  <div class="options">
+    <label class="opt-label"><input type="checkbox" name="qcm10" value="a"> Elle peut afficher du texte simple</label>
+    <label class="opt-label"><input type="checkbox" name="qcm10" value="b"> Elle peut afficher la valeur de variables avec des spécificateurs</label>
+    <label class="opt-label"><input type="checkbox" name="qcm10" value="c"> Elle lit des données saisies par l'utilisateur</label>
+    <label class="opt-label"><input type="checkbox" name="qcm10" value="d"> On peut combiner plusieurs variables dans un seul appel</label>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     PARTIE IV — RÉPONSES COURTES  (5 × 0.6 = 3 pts)
+════════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-pill">Partie IV</div>
+  <div class="section-title">Réponses courtes</div>
+  <div class="section-points">5 questions · 3 pts</div>
+</div>
+
+<div class="q-card" id="qrc1">
+  <div class="q-num">RC · 01</div>
+  <div class="q-text">Qu'est-ce que <code>#include &lt;stdio.h&gt;</code> et pourquoi est-il nécessaire dans un programme C ?</div>
+  <textarea class="short-answer" placeholder="Votre réponse…" oninput="markAnswered('rc1')"></textarea>
+</div>
+
+<div class="q-card" id="qrc2">
+  <div class="q-num">RC · 02</div>
+  <div class="q-text">Expliquez la différence entre le langage C et le C++ en une ou deux phrases.</div>
+  <textarea class="short-answer" placeholder="Votre réponse…" oninput="markAnswered('rc2')"></textarea>
+</div>
+
+<div class="q-card" id="qrc3">
+  <div class="q-num">RC · 03</div>
+  <div class="q-text">À quoi sert la fonction <code>scanf()</code> ? Donnez sa syntaxe générale pour lire un entier.</div>
+  <textarea class="short-answer" placeholder="Votre réponse…" oninput="markAnswered('rc3')"></textarea>
+</div>
+
+<div class="q-card" id="qrc4">
+  <div class="q-num">RC · 04</div>
+  <div class="q-text">Citez les trois types de données de base vus en cours (C) et donnez un exemple de valeur pour chacun.</div>
+  <textarea class="short-answer" placeholder="Votre réponse…" oninput="markAnswered('rc4')"></textarea>
+</div>
+
+<div class="q-card" id="qrc5">
+  <div class="q-num">RC · 05</div>
+  <div class="q-text">Que se passe-t-il si on oublie le point-virgule à la fin d'une instruction en C ? Expliquez avec vos propres mots.</div>
+  <textarea class="short-answer" placeholder="Votre réponse…" oninput="markAnswered('rc5')"></textarea>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     PARTIE V — CODAGE  (5 × 0.6 = 3 pts)
+════════════════════════════════════════════ -->
+<div class="section-header">
+  <div class="section-pill">Partie V</div>
+  <div class="section-title">Questions de codage</div>
+  <div class="section-points">5 questions · 3 pts</div>
+</div>
+
+<div class="q-card" id="qco1">
+  <div class="q-num">CODE · 01</div>
+  <div class="q-text">Complétez le code suivant pour afficher <strong>"Bonjour le monde!"</strong> à l'écran :</div>
+  <pre>#include &lt;stdio.h&gt;
+int _______ () {
+    _______("Bonjour le monde!");
+    return ___;
+}</pre>
+  <textarea class="code-answer" placeholder="Écrivez ici le code complet et corrigé…" oninput="markAnswered('co1')"></textarea>
+</div>
+
+<div class="q-card" id="qco2">
+  <div class="q-num">CODE · 02</div>
+  <div class="q-text">Écrivez un programme C qui déclare une variable <code>age</code> de type entier valant <code>21</code>, puis affiche : <strong>"Mon âge est : 21"</strong>.</div>
+  <textarea class="code-answer" placeholder="Écrivez votre programme C ici…" oninput="markAnswered('co2')"></textarea>
+</div>
+
+<div class="q-card" id="qco3">
+  <div class="q-num">CODE · 03</div>
+  <div class="q-text">Écrivez un programme C qui demande à l'utilisateur de saisir un entier et affiche sa valeur précédée du texte <strong>"Vous avez saisi : "</strong>.</div>
+  <textarea class="code-answer" placeholder="Écrivez votre programme C ici…" oninput="markAnswered('co3')"></textarea>
+</div>
+
+<div class="q-card" id="qco4">
+  <div class="q-num">CODE · 04</div>
+  <div class="q-text">Corrigez les erreurs dans le code suivant (il y en a au moins 3) :</div>
+  <pre>#include stdio.h
+
+int main()
+    int x = 10
+    int y = 5
+    printf("Somme : %f", x + y)
+    return 0
+}</pre>
+  <textarea class="code-answer" placeholder="Écrivez le code corrigé ici…" oninput="markAnswered('co4')"></textarea>
+</div>
+
+<div class="q-card" id="qco5">
+  <div class="q-num">CODE · 05</div>
+  <div class="q-text">Écrivez un programme C complet qui calcule la surface d'un rectangle dont la longueur et la largeur sont saisies par l'utilisateur, puis affiche le résultat.</div>
+  <textarea class="code-answer" placeholder="Écrivez votre programme C ici…" oninput="markAnswered('co5')"></textarea>
+</div>
+
+
+<!-- SUBMIT -->
+<div id="submit-zone">
+  <button id="submit-btn" onclick="submitExam()">Soumettre le devoir</button>
+</div>
+
+<!-- RESULT -->
+<div id="result-panel">
+  <div class="score-circle" id="score-circle">
+    <div class="score-num" id="score-num">—</div>
+    <div class="score-den">/ 20</div>
+  </div>
+  <div class="appreciation" id="appreciation-text">—</div>
+  <div class="appreciation-sub" id="appreciation-sub">—</div>
+  <div class="detail-row">
+    <div class="detail-item"><strong id="d-vf">—</strong>Vrai/Faux (/ 4)</div>
+    <div class="detail-item"><strong id="d-qcu">—</strong>QCU (/ 5)</div>
+    <div class="detail-item"><strong id="d-qcm">—</strong>QCM (/ 5)</div>
+    <div class="detail-item"><strong id="d-rc">—</strong>Réponses courtes (/ 3)</div>
+    <div class="detail-item"><strong id="d-co">—</strong>Codage (/ 3)</div>
+  </div>
+  <div id="penalty-row" style="display:none; margin-top:18px; background:rgba(242,107,107,.1); border:1px solid rgba(242,107,107,.4); border-radius:8px; padding:12px 18px;">
+    <div style="color:#f26b6b; font-weight:700; font-size:15px;">⚠️ Pénalité sortie de page : <span id="d-penalty">0</span> pt</div>
+    <div id="penalty-leaves" style="font-size:12px; color:#8892a4; margin-top:4px;"></div>
+  </div>
+  <button id="screenshot-btn" onclick="captureScreen()">
+    📸 &nbsp;Capturer ma note (screenshot)
+  </button>
+  <img id="screenshot-capture" alt="Capture de la note">
+</div>
+
+</div><!-- /questions-wrapper -->
+
+</main>
+
+<script>
+// ── START DEVOIR ──────────────────────────────────
+function clearFieldError(id){
+  const inp = document.getElementById(id);
+  inp.classList.remove('field-error');
+  const msg = document.getElementById('err-' + id.replace('f-',''));
+  if(msg) msg.classList.remove('show');
+}
+
+function startDevoir(){
+  const fields = [
+    {id:'f-nom',    errId:'err-nom'},
+    {id:'f-prenom', errId:'err-prenom'},
+    {id:'f-classe', errId:'err-classe'},
+    {id:'f-annee',  errId:'err-annee'},
+  ];
+  let valid = true;
+  fields.forEach(({id, errId}) => {
+    const inp = document.getElementById(id);
+    const msg = document.getElementById(errId);
+    if(!inp.value.trim()){
+      inp.classList.add('field-error');
+      if(msg) msg.classList.add('show');
+      valid = false;
+    }
+  });
+  if(!valid){
+    const banner = document.getElementById('identity-error-banner');
+    banner.style.display = 'block';
+    document.getElementById('identity-bar').scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  // all good — hide banner, lock fields, start
+  document.getElementById('identity-error-banner').style.display = 'none';
+  fields.forEach(({id}) => { document.getElementById(id).readOnly = true; });
+  document.getElementById('start-btn-zone').style.display = 'none';
+  const qw = document.getElementById('questions-wrapper');
+  qw.style.display = 'block';
+  qw.scrollIntoView({behavior:'smooth', block:'start'});
+  if(!timerStarted){ timerStarted = true; timerInterval = setInterval(updateTimer, 1000); updateTimer(); }
+}
+
+// ── STATE ──────────────────────────────────────────
+const answers = {};
+let timerInterval = null;
+let secondsLeft = 90 * 60;
+let examSubmitted = false;
+let leaveCount = 0;
+let timerStarted = false;
+
+// ── CORRECT ANSWERS ────────────────────────────────
+const correctVF = {
+  vf1:'V', vf2:'V', vf3:'F', vf4:'V', vf5:'F',
+  vf6:'F', vf7:'V', vf8:'F', vf9:'V', vf10:'V'
+};
+const correctQCU = {
+  qcu1:'b', qcu2:'c', qcu3:'c', qcu4:'c', qcu5:'b',
+  qcu6:'c', qcu7:'b', qcu8:'b', qcu9:'c', qcu10:'c'
+};
+// correct sets for QCM (all correct options)
+const correctQCM = {
+  qcm1:  ['a','c','d'],
+  qcm2:  ['a','b','d'],
+  qcm3:  ['a','b','c'],
+  qcm4:  ['a','b','c'],
+  qcm5:  ['a','b','d'],
+  qcm6:  ['a','b','d'],
+  qcm7:  ['a','b','c'],
+  qcm8:  ['a','b','d'],
+  qcm9:  ['a','b','c'],
+  qcm10: ['a','b','d']
+};
+
+// ── TIMER ──────────────────────────────────────────
+function pad(n){ return String(n).padStart(2,'0'); }
+function updateTimer(){
+  const h = Math.floor(secondsLeft/3600);
+  const m = Math.floor((secondsLeft%3600)/60);
+  const s = secondsLeft % 60;
+  const el = document.getElementById('timer-display');
+  el.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+  el.className = '';
+  if(secondsLeft <= 300) el.classList.add('danger');
+  else if(secondsLeft <= 900) el.classList.add('warning');
+  if(secondsLeft <= 0){ clearInterval(timerInterval); autoSubmit(); }
+  secondsLeft--;
+}
+// timer starts on "Commencer" click — see startDevoir()
+
+function autoSubmit(){
+  if(!examSubmitted){ examSubmitted=true; computeScore(); }
+}
+
+// ── TF BUTTONS ────────────────────────────────────
+function setTF(qid, val, btn){
+  answers[qid] = val;
+  const group = btn.closest('.tf-group');
+  group.querySelectorAll('.tf-btn').forEach(b => {
+    b.classList.remove('selected-true','selected-false');
+  });
+  btn.classList.add(val==='V' ? 'selected-true' : 'selected-false');
+  document.getElementById('q'+qid).classList.add('answered');
+}
+
+// ── ANSWERED INDICATOR ────────────────────────────
+function markAnswered(id){
+  document.getElementById('q'+id).classList.add('answered');
+}
+
+// ── PREVENT LEAVING ───────────────────────────────
+// Use a single flag to avoid double-counting blur + visibilitychange on the same leave
+let leavePending = false;
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden && !examSubmitted && !leavePending){
+    leavePending = true;
+    leaveCount++;
+    document.getElementById('overlay').classList.add('show');
+  }
+  if(!document.hidden){ leavePending = false; }
+});
+window.addEventListener('blur', () => {
+  if(!examSubmitted && !leavePending){
+    leavePending = true;
+    leaveCount++;
+    document.getElementById('overlay').classList.add('show');
+  }
+});
+window.addEventListener('focus', () => { leavePending = false; });
+window.onbeforeunload = (e) => {
+  if(!examSubmitted){ e.preventDefault(); e.returnValue=''; }
+};
+function dismissOverlay(){
+  document.getElementById('overlay').classList.remove('show');
+  leavePending = false;
+}
+
+// ── SCORING ───────────────────────────────────────
+function submitExam(){
+  if(examSubmitted) return;
+  examSubmitted = true;
+  clearInterval(timerInterval);
+  document.getElementById('submit-btn').disabled = true;
+  computeScore();
+}
+
+function computeScore(){
+  let vfScore = 0, qcuScore = 0, qcmScore = 0;
+
+  // VF: 10 × 0.4 = 4
+  for(const [k,v] of Object.entries(correctVF)){
+    const btns = document.querySelectorAll(`#q${k} .tf-btn`);
+    btns.forEach(b => {
+      if(b.classList.contains('selected-true') || b.classList.contains('selected-false')){
+        // find selected value
+      }
+    });
+    const sel = answers[k];
+    if(sel === v) vfScore += 0.4;
+  }
+
+  // QCU: 10 × 0.5 = 5
+  for(const [k,v] of Object.entries(correctQCU)){
+    const chosen = document.querySelector(`input[name="${k}"]:checked`);
+    if(chosen && chosen.value === v) qcuScore += 0.5;
+  }
+
+  // QCM: 10 × 0.5 = 5 (all-or-nothing per question)
+  for(const [k,v] of Object.entries(correctQCM)){
+    const checked = [...document.querySelectorAll(`input[name="${k}"]:checked`)].map(i=>i.value).sort();
+    const correct = [...v].sort();
+    if(JSON.stringify(checked) === JSON.stringify(correct)) qcmScore += 0.5;
+  }
+
+  // RC: count non-empty (0.6 each, max 3) — teacher-graded approximation
+  let rcScore = 0;
+  ['rc1','rc2','rc3','rc4','rc5'].forEach(id => {
+    const ta = document.querySelector(`#q${id} textarea`);
+    if(ta && ta.value.trim().length > 10) rcScore += 0.6;
+  });
+
+  // Code: count non-empty (0.6 each, max 3)
+  let coScore = 0;
+  ['co1','co2','co3','co4','co5'].forEach(id => {
+    const ta = document.querySelector(`#q${id} textarea`);
+    if(ta && ta.value.trim().length > 10) coScore += 0.6;
+  });
+
+  // Penalty: -0.5 per leave after the first
+  const penaltyLeaves = Math.max(0, leaveCount - 1);
+  const penalty = penaltyLeaves * 0.5;
+  const raw = vfScore + qcuScore + qcmScore + rcScore + coScore;
+  const total = Math.max(0, Math.min(20, +(raw - penalty).toFixed(2)));
+
+  showResult(total, vfScore, qcuScore, qcmScore, rcScore, coScore, penalty, leaveCount);
+}
+
+function showResult(total, vf, qcu, qcm, rc, co, penalty, leaves){
+  const panel = document.getElementById('result-panel');
+  panel.style.display = 'block';
+  document.getElementById('screenshot-btn').style.display = 'flex';
+  panel.scrollIntoView({behavior:'smooth'});
+
+  document.getElementById('score-num').textContent = total.toFixed(2);
+  document.getElementById('d-vf').textContent  = vf.toFixed(2);
+  document.getElementById('d-qcu').textContent = qcu.toFixed(2);
+  document.getElementById('d-qcm').textContent = qcm.toFixed(2);
+  document.getElementById('d-rc').textContent  = rc.toFixed(2);
+  document.getElementById('d-co').textContent  = co.toFixed(2);
+
+  // Show leave penalty row
+  const penEl = document.getElementById('d-penalty');
+  const penRow = document.getElementById('penalty-row');
+  if(penalty > 0){
+    penEl.textContent = '-' + penalty.toFixed(2);
+    penRow.style.display = 'block';
+    document.getElementById('penalty-leaves').textContent =
+      `${leaves} sortie(s) détectée(s) — 1ère tolérée, ${leaves-1} pénalisée(s) × 0,5 pt`;
+  }
+
+  let app, sub, color;
+  if(total >= 18)      { app='Excellent !';         sub='Performance exceptionnelle, félicitations !'; color='#2dd4a0'; }
+  else if(total >= 16) { app='Très Bien';            sub='Très bonne maîtrise du cours.';               color='#4f9cf9'; }
+  else if(total >= 14) { app='Bien';                 sub='Bonne compréhension générale.';               color='#7c5cbf'; }
+  else if(total >= 12) { app='Assez Bien';           sub='Des lacunes à combler, continuez vos efforts.'; color='#f5c842'; }
+  else if(total >= 10) { app='Passable';             sub='Niveau minimum atteint, mais à améliorer.';   color='#f5a742'; }
+  else if(total >= 8)  { app='Insuffisant';          sub='Révisions sérieuses nécessaires.';             color='#f26b6b'; }
+  else                 { app='Très Insuffisant';     sub='Reprendre le cours depuis le début.';          color='#e74c3c'; }
+
+  document.getElementById('appreciation-text').textContent = app;
+  document.getElementById('appreciation-text').style.color = color;
+  document.getElementById('appreciation-sub').textContent = sub;
+
+  const circle = document.getElementById('score-circle');
+  circle.style.background = `conic-gradient(${color} ${(total/20)*360}deg, #1c2333 0deg)`;
+  circle.style.boxShadow = `0 0 30px ${color}44`;
+}
+
+// ── SCREENSHOT ─────────────────────────────────────
+async function captureScreen(){
+  const btn = document.getElementById('screenshot-btn');
+  btn.textContent = '⏳ Capture en cours…';
+  btn.disabled = true;
+  try {
+    const canvas = await html2canvas(document.getElementById('result-panel'), {
+      backgroundColor: '#1c2333',
+      scale: 2,
+      useCORS: true
+    });
+    const img = document.getElementById('screenshot-capture');
+    img.src = canvas.toDataURL('image/png');
+    img.style.display = 'block';
+    // also trigger download
+    const a = document.createElement('a');
+    const nom = document.getElementById('f-nom').value.trim() || 'etudiant';
+    const prenom = document.getElementById('f-prenom').value.trim() || '';
+    a.download = `note_devoir_C_${nom}_${prenom}.png`.replace(/\s+/g,'_');
+    a.href = img.src;
+    a.click();
+    btn.textContent = '✅ Capture enregistrée !';
+  } catch(e) {
+    btn.textContent = '❌ Erreur — réessayez';
+    btn.disabled = false;
+    console.error(e);
+  }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</body>
+</html>
